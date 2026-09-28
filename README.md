@@ -16,9 +16,11 @@
 ## 运行方式
 
 ### 桌面版（免环境）
+
 双击 `CMSolution.exe`（需与 `_internal` 文件夹同级，系统需 WebView2 运行时）。
 
 ### 源码运行
+
 ```bash
 pip install -r requirements.txt
 python app.py          # 网页版 http://127.0.0.1:5099
@@ -26,6 +28,7 @@ python webview_app.py  # 桌面窗口版（pywebview）
 ```
 
 ### 打包 exe
+
 ```bash
 build_exe.bat   # PyInstaller
 ```

@@ -5,7 +5,7 @@ cd /d "%~dp0"
 set PY=C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe
 
 echo [1/4] PyInstaller building...
-"%PY%" -m PyInstaller --noconfirm --clean --onedir --windowed --name CMSolution --add-data "templates;templates" --add-data "assets;assets" webview_app.py
+"%PY%" -m PyInstaller --noconfirm --clean --onedir --windowed --name CMSolution --icon "assets\cm_icon.ico" --add-data "templates;templates" --add-data "assets;assets" webview_app.py
 if not exist "dist\CMSolution\CMSolution.exe" (
     echo [FAIL] exe build failed
     pause
