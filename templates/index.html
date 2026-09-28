@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>CMSolution · 青瞳动捕方案生成器</title>
+<style>
+  :root {
+    --primary: #1677FF;
+    --primary-dark: #0E5FD9;
+    --primary-light: #69B1FF;
+    --bg: #F7F8FA;
+    --card: #FFFFFF;
+    --ink: #1A1A1A;
+    --label: #333333;
+    --muted: #999999;
+    --line: #E5E7EB;
+    --ring: rgba(22,119,255,.14);
+    --radius: 16px;
+    --shadow: 0 4px 12px rgba(0,0,0,.05);
+    --shadow-hover: 0 8px 24px rgba(22,119,255,.10);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(1200px 480px at 85% -10%, rgba(22,119,255,.07), transparent 60%),
+      radial-gradient(900px 400px at -10% 0%, rgba(105,177,255,.06), transparent 55%);
+    background-attachment: fixed;
+    color: var(--ink); margin: 0; min-height: 100vh;
+  }
+
+  /* ---------- 页头品牌区 ---------- */
+  .page-head { max-width: 920px; margin: 0 auto; padding: 44px 24px 8px;
+               display: flex; align-items: center; gap: 16px; }
+  .brand-mark { width: 40px; height: 40px; flex: none; border-radius: 12px;
+                background: #FFFFFF; border: 1px solid #EAF0F8;
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 6px 16px rgba(22,119,255,.18); }
+  .brand-mark svg { width: 26px; height: 26px; }
+  .brand-mark img { width: 24px; height: 24px; object-fit: contain; }
+  .page-head h1 { font-size: 27px; font-weight: 800; letter-spacing: .5px;
+                  margin: 0; line-height: 1.2; color: var(--ink); }
+  .page-head h1 em { font-style: normal; color: var(--primary); }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 5px; line-height: 1.5; }
+
+  /* ---------- 卡片容器 ---------- */
+  .wrap { max-width: 920px; margin: 0 auto; padding: 16px 24px 56px; }
+  fieldset {
+    border: 0; background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 22px 24px 14px; margin: 0 0 20px;
+    transition: box-shadow .25s ease;
+  }
+  fieldset:hover { box-shadow: var(--shadow-hover); }
+  legend {
+    float: left; width: 100%; padding: 0; margin: 0 0 14px;
+    font-size: 15px; font-weight: 700; color: var(--ink);
+    display: flex; align-items: center; gap: 9px;
+  }
+  legend::before {
+    content: ""; width: 4px; height: 16px; border-radius: 2px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-light));
+    flex: none;
+  }
+  legend + * { clear: both; }
+
+  /* ---------- 栅格与表单控件 ---------- */
+  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .col { flex: 1 1 200px; margin-bottom: 16px; min-width: 0; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--label);
+          margin-bottom: 7px; letter-spacing: .2px; }
+  label .req { color: #F5222D; font-weight: 700; margin-left: 2px; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; padding: 9px 12px; font-size: 14px; font-family: inherit;
+    color: var(--ink); background: #FCFCFD;
+    border: 1px solid var(--line); border-radius: 8px;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    appearance: none; -webkit-appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 34px; cursor: pointer;
+  }
+  input[type=text]:hover, input[type=number]:hover, select:hover, textarea:hover {
+    border-color: #C9CFD8;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--ring); background: #fff;
+  }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+  textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+
+  /* ---------- 复选框 ---------- */
+  .chks { display: flex; flex-wrap: wrap; margin-bottom: 8px; }
+  .chk { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px;
+         font-weight: 400; color: var(--label); margin: 4px 20px 6px 0;
+         line-height: 1.55; cursor: pointer; }
+  .chk input { width: 16px; height: 16px; margin: 2px 0 0; flex: none;
+               accent-color: var(--primary); cursor: pointer; }
+
+  /* ---------- 场景选项卡 ---------- */
+  .scene-opt {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 18px 24px 12px; margin: 0 0 20px;
+    border-left: 4px solid var(--primary);
+    transition: box-shadow .25s ease;
+  }
+  .scene-opt:hover { box-shadow: var(--shadow-hover); }
+  .scene-opt .ttl { font-size: 14px; font-weight: 700; color: var(--primary-dark);
+                    margin: 2px 0 12px; letter-spacing: .3px; }
+
+  /* ---------- 辅助说明 ---------- */
+  .hint { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.6; }
+  .hint.ok { color: #0e9f6e; }
+  .hint.warn { color: #d4380d; }
+
+  /* ---------- 详略滑块（重绘） ---------- */
+  .slider-zone { position: relative; padding-top: 26px; }
+  .slider-tip {
+    position: absolute; top: 0; transform: translateX(-50%);
+    background: var(--ink); color: #fff; font-size: 12px; font-weight: 600;
+    padding: 3px 10px; border-radius: 6px; white-space: nowrap;
+    transition: left .12s ease; pointer-events: none;
+  }
+  .slider-tip::after {
+    content: ""; position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
+    border: 4px solid transparent; border-top-color: var(--ink); border-bottom: 0;
+  }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
+    border-radius: 3px; outline: none; margin: 6px 0 10px; cursor: pointer;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary) var(--fill,50%), #E9EDF3 var(--fill,50%), #E9EDF3 100%);
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--primary);
+    box-shadow: 0 2px 8px rgba(22,119,255,.35); cursor: grab;
+    transition: transform .15s ease;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: #fff;
+    border: 3px solid var(--primary); box-shadow: 0 2px 8px rgba(22,119,255,.35); cursor: grab;
+  }
+  .slider-scale { display: flex; justify-content: space-between; }
+  .slider-scale span { font-size: 12px; color: var(--muted); transition: color .2s; }
+  .slider-scale span.on { color: var(--primary); font-weight: 600; }
+  #detail_label { color: var(--primary-dark); }
+
+  /* ---------- 提交按钮 ---------- */
+  .submit-zone { text-align: center; padding: 8px 0 4px; }
+  button {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff; border: 0; border-radius: 10px; padding: 14px 56px;
+    font-size: 16px; font-weight: 700; letter-spacing: 2px; cursor: pointer;
+    box-shadow: 0 6px 18px rgba(22,119,255,.32);
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  }
+  button:hover { transform: translateY(-2px);
+                 box-shadow: 0 10px 26px rgba(22,119,255,.40); filter: brightness(1.05); }
+  button:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(22,119,255,.30); }
+
+  @media (max-width: 640px) {
+    .row { gap: 0; }
+    .col { flex: 1 1 100%; }
+    .page-head { padding-top: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div class="brand-mark">
+    <img src="/assets/brand_icon.png?v=4" alt="青瞳视觉">
+  </div>
+  <div>
+    <h1>CM<em>Solution</em></h1>
+    <div class="sub">青瞳视觉 · 动捕行业解决方案生成器 —— 输入客户信息与场地参数，自动生成完整技术方案（Word）</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <form method="post" action="/generate">
+    <fieldset>
+      <legend>客户与方案</legend>
+      <div class="row">
+        <div class="col">
+          <label>客户名称<span class="req">*</span></label>
+          <input type="text" name="client" required placeholder="如：某某机器人公司">
+        </div>
+        <div class="col">
+          <label>方案类型<span class="req">*</span></label>
+          <select name="scene" id="scene">
+            {% for k, s in scenes.items() %}
+            <option value="{{ k }}">{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>被测对象</label>
+          <input type="text" name="obj" id="obj" placeholder="留空则按方案类型默认">
+        </div>
+        <div class="col">
+          <label>相机型号（主）</label>
+          <select name="camera" id="camera">
+            <option value="auto">自动推荐（按场地尺寸与方案类型）</option>
+            {% for k, c in cameras.items() %}
+            <option value="{{ k }}" data-dp="{{ c.dist_p }}" data-da="{{ c.dist_a }}">{{ k }}（{{ c.tag }}｜被动{{ c.dist_p }}m/主动{{ c.dist_a }}m）</option>
+            {% endfor %}
+          </select>
+          <div class="hint" id="cam_hint"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>相机数量模式</label>
+          <select name="cam_mode" id="cam_mode">
+            <option value="auto">自动计算（按场地与部署规则）</option>
+            <option value="manual">手动输入数量</option>
+          </select>
+        </div>
+        <div class="col" id="camn_wrap" style="display:none">
+          <label>主型号数量（台）</label>
+          <input type="number" name="cam_n" min="4" value="12">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>混用相机型号（可选）</label>
+          <select name="camera2" id="camera2">
+            <option value="">不混用（单一型号）</option>
+            {% for k, c in cameras.items() %}
+            <option value="{{ k }}" data-dp="{{ c.dist_p }}" data-da="{{ c.dist_a }}">{{ k }}（{{ c.tag }}｜被动{{ c.dist_p }}m/主动{{ c.dist_a }}m）</option>
+            {% endfor %}
+          </select>
+          <div class="hint">双型号交错部署，如 MC4000+MC4000W 长焦广角互补</div>
+        </div>
+        <div class="col" id="cam2n_wrap" style="display:none">
+          <label>混用型号数量（台）</label>
+          <input type="number" name="cam2_n" min="1" value="4">
+          <div class="hint" id="cam2n_hint">自动模式下从总量中拨出该数量</div>
+        </div>
+      </div>
+      <div class="col">
+        <label>特殊要求 / 补充说明（可选）</label>
+        <textarea name="note" placeholder="如：需与甲方 ROS 系统对接；需预留二期扩展…"></textarea>
+      </div>
+      <div class="col">
+        <label>方案详略程度：<b id="detail_label">标准版</b></label>
+        <div class="slider-zone">
+          <div class="slider-tip" id="slider_tip">标准版</div>
+          <input type="range" id="detail_range" min="1" max="3" step="1" value="2">
+          <input type="hidden" name="detail" id="detail" value="standard">
+          <div class="hint slider-scale">
+            <span data-v="1">基础版</span><span data-v="2" class="on">标准版</span><span data-v="3">深度版</span>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>场地尺寸（米）</legend>
+      <div class="row">
+        <div class="col"><label>长 L<span class="req">*</span></label><input type="number" name="L" step="0.5" min="2" value="8" required></div>
+        <div class="col"><label>宽 W<span class="req">*</span></label><input type="number" name="W" step="0.5" min="2" value="5" required></div>
+        <div class="col"><label>高 H<span class="req">*</span></label><input type="number" name="H" step="0.5" min="2" value="3" required></div>
+        <div class="col">
+          <label>布置层数</label>
+          <select name="layers">
+            <option value="0">自动（高度＞6m 两层）</option>
+            <option value="1">单层</option>
+            <option value="2">两层</option>
+            <option value="3">三层</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint">按捕捉区域净空间填写；部署规则将据此自动计算相机数量与布局。场地高度＞6m 时自动按两层立体部署，相机数量成倍增加。</div>
+    </fieldset>
+
+    <div class="scene-opt" data-scene="robot">
+      <div class="ttl">机器人定位选项</div>
+      <div class="chks">
+        <label class="chk"><input type="checkbox" name="low_layer" checked>增加低位补盲层（末端近地作业，场地高≥2.5m 时部署 4 台 @1.2m）</label>
+      </div>
+    </div>
+
+    <div class="scene-opt" data-scene="drone" style="display:none">
+      <div class="ttl">无人机选项</div>
+      <div class="row">
+        <div class="col"><label>追踪目标数量</label><input type="number" name="targets" min="1" value="2"></div>
+        <div class="col" style="align-self:end">
+          <div class="hint">标记点类型在下方“通用选项”中选择；大空间/集群推荐主动光标记体（含 IMU，可编码 ID）。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scene-opt" data-scene="human" style="display:none">
+      <div class="ttl">人体/影视动捕选项</div>
+      <div class="row">
+        <div class="col"><label>同时捕捉人数</label><input type="number" name="persons" min="1" value="1"></div>
+      </div>
+      <div class="chks">
+        <label class="chk"><input type="checkbox" name="render_server">增配渲染服务器（实时驱动数字人/虚拍）</label>
+        <label class="chk"><input type="checkbox" name="face">面捕头盔</label>
+      </div>
+    </div>
+
+    <div class="scene-opt" data-scene="embodied" style="display:none">
+      <div class="ttl">具身智能选项</div>
+      <div class="hint">本类型默认含 R3 AI 参考相机 ×1（影像映射/重投影校验）；遥操作建议搭配数据手套。</div>
+    </div>
+
+    <div class="scene-opt" data-scene="vr" style="display:none">
+      <div class="ttl">VR 大空间选项</div>
+      <div class="row">
+        <div class="col"><label>同场人数</label><input type="number" name="persons" min="1" value="4"></div>
+      </div>
+      <div class="hint">支持多人同场（可扩展至百人）；标记点按“头显+双手柄”每套刚体配置，虚实道具按批定制。</div>
+    </div>
+
+    <div class="scene-opt" data-scene="xr" style="display:none">
+      <div class="ttl">XR/VP 虚拟拍摄选项</div>
+      <div class="row">
+        <div class="col"><label>拍摄机位数量</label><input type="number" name="targets" min="1" value="1"></div>
+      </div>
+      <div class="hint">按 LED 屏宽=场地长边设计：顶部弧形阵列+侧向补盲+外围灯架；每机位配 1 套摄像机定位套件；默认含渲染与合成服务器。</div>
+    </div>
+
+    <div class="scene-opt" data-scene="underwater" style="display:none">
+      <div class="ttl">水下动捕选项</div>
+      <div class="row">
+        <div class="col"><label>追踪目标数量</label><input type="number" name="targets" min="1" value="1"></div>
+      </div>
+      <div class="hint">场地按水池尺寸填写（高 = 水深）。默认 U4 蓝光相机双层环绕部署（上层近水面+中层平视），自动配 UWConnectionUnit 接入盒、防水电缆、水下固定套件与蓝光标记点。</div>
+    </div>
+
+    <div class="scene-opt" data-scene="custom" style="display:none">
+      <div class="ttl">特殊定制项目选项</div>
+      <div class="chks">
+        <label class="chk"><input type="checkbox" name="ctag" value="large">超大空间</label>
+        <label class="chk"><input type="checkbox" name="ctag" value="outdoor">室外/半室外</label>
+        <label class="chk"><input type="checkbox" name="ctag" value="occlusion">遮挡严重</label>
+        <label class="chk"><input type="checkbox" name="ctag" value="highspeed">高速运动</label>
+        <label class="chk"><input type="checkbox" name="ctag" value="multitarget">多目标</label>
+        <label class="chk"><input type="checkbox" name="ctag" value="irregular">异形空间</label>
+        <label class="chk"><input type="checkbox" name="ctag" value="temperature">高低温/湿热</label>
+        <label class="chk"><input type="checkbox" name="ctag" value="vibration">振动/冲击</label>
+        <label class="chk"><input type="checkbox" name="ctag" value="underwater">水下</label>
+      </div>
+      <div class="hint">勾选项目面临的难点/环境特征，将自动生成“难点拆解与解决路径”章节；<br>
+      <b>务必</b>在上方“特殊要求/补充说明”中详细描述项目背景、被测对象、环境条件与指标要求，将写入“项目背景”。</div>
+    </div>
+
+    <fieldset>
+      <legend>通用选项</legend>
+      <div class="row">
+        <div class="col">
+          <label>动捕软件</label>
+          <select name="software">
+            <option value="">按方案类型默认</option>
+            <option value="CMAvatar">CMAvatar</option>
+            <option value="CMTracker">CMTracker</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>数据手套（选配）</label>
+          <select name="glove_model">
+            <option value="">不配置</option>
+            <option value="Feeler">Feeler 光惯融合数据手套</option>
+            <option value="Pulse">Pulse 数据手套</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>标记点类型<span class="req">*</span></label>
+          <select name="marker_type" id="marker_type">
+            <option value="passive">被动反光标记点（常规室内）</option>
+            <option value="active">主动光标记体（大空间/室外/多目标）</option>
+            <option value="hybrid">主被动混用（按被动距离从严校核）</option>
+          </select>
+          <div class="hint">影响相机识别距离校核与标记点清单</div>
+        </div>
+        <div class="col">
+          <label>同步机</label>
+          <select name="sync_model">
+            <option value="auto">自动推荐（按方案类型）</option>
+            <option value="CMLOCK">CMLOCK（6 入 6 出+Genlock/Timecode/VESA，机架式）</option>
+            <option value="CMLOCK mini">CMLOCK mini（单路同步+开关量/补光灯联动，轻量）</option>
+            <option value="none">不配置</option>
+          </select>
+          <div class="hint">虚拍/影视工作流自动配 CMLOCK，其余场景默认 mini</div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="submit-zone">
+      <button type="submit">生成方案 Word</button>
+    </div>
+  </form>
+</div>
+<script>
+  const sceneSel = document.getElementById('scene');
+  const objInput = document.getElementById('obj');
+  const defaults = {
+    robot: '移动机器人本体及末端执行器',
+    drone: '无人机（含集群）',
+    human: '动捕演员（人体全身动作）',
+    embodied: '人形机器人/灵巧手（遥操作与数采）',
+    vr: 'VR 头显、手柄与虚实道具（多人同场）',
+    xr: '真实摄影机（含镜头参数）与虚拟拍摄机位',
+    custom: '实验目标（运动位置与姿态）',
+    underwater: '水下机器人/航行器模型（水动力试验）'
+  };
+  function refresh() {
+    const v = sceneSel.value;
+    document.querySelectorAll('.scene-opt').forEach(el => {
+      el.style.display = (el.dataset.scene === v) ? '' : 'none';
+    });
+    objInput.placeholder = defaults[v] || '';
+    // 场景联动标记点类型默认值（无人机/XR 默认主动，其余默认被动）
+    const mt = document.getElementById('marker_type');
+    mt.value = ({drone: 'active', xr: 'active', underwater: 'active'})[v] || 'passive';
+    mt.dispatchEvent(new Event('change'));
+  }
+  sceneSel.addEventListener('change', refresh);
+  refresh();
+  // 数量模式与混用联动
+  const camMode = document.getElementById('cam_mode');
+  const cam2 = document.getElementById('camera2');
+  function refreshCam() {
+    document.getElementById('camn_wrap').style.display =
+      (camMode.value === 'manual') ? '' : 'none';
+    document.getElementById('cam2n_wrap').style.display = cam2.value ? '' : 'none';
+    document.getElementById('cam2n_hint').textContent =
+      (camMode.value === 'manual') ? '手动模式下直接相加为总数量' : '自动模式下从总量中拨出该数量';
+  }
+  camMode.addEventListener('change', refreshCam);
+  cam2.addEventListener('change', refreshCam);
+  refreshCam();
+  // 详略程度选择条（含渐变轨道填充、悬浮提示与刻度高亮）
+  const detailMap = {1: ['basic', '基础版'], 2: ['standard', '标准版'], 3: ['full', '深度版']};
+  const range = document.getElementById('detail_range');
+  const tip = document.getElementById('slider_tip');
+  function refreshSlider() {
+    const val = +range.value;
+    const [v, label] = detailMap[val];
+    document.getElementById('detail').value = v;
+    document.getElementById('detail_label').textContent = label;
+    const pct = (val - 1) / 2 * 100;
+    range.style.setProperty('--fill', pct + '%');
+    tip.textContent = label;
+    const w = range.clientWidth, x = 10 + (w - 20) * (val - 1) / 2;
+    tip.style.left = x + 'px';
+    document.querySelectorAll('.slider-scale span').forEach(s => {
+      s.classList.toggle('on', +s.dataset.v === val);
+    });
+  }
+  range.addEventListener('input', refreshSlider);
+  window.addEventListener('resize', refreshSlider);
+  refreshSlider();
+
+  // 选型-场地距离实时校核：识别距离须覆盖 sqrt((L/2)^2+(W/2)^2+H^2)
+  const camSel = document.getElementById('camera');
+  const camHint = document.getElementById('cam_hint');
+  const inL = document.querySelector('input[name="L"]');
+  const inW = document.querySelector('input[name="W"]');
+  const inH = document.querySelector('input[name="H"]');
+  const markerSel = document.getElementById('marker_type');
+  function reqRange() {
+    const L = parseFloat(inL.value) || 0, W = parseFloat(inW.value) || 0, H = parseFloat(inH.value) || 0;
+    return Math.sqrt((L / 2) ** 2 + (W / 2) ** 2 + H ** 2);
+  }
+  function checkCamRange() {
+    const d = reqRange();
+    const active = markerSel.value === 'active';   // 主被动混用按被动距离从严校核
+    const mk = markerSel.value === 'active' ? '主动' : (markerSel.value === 'hybrid' ? '主被动（按被动校核）' : '被动');
+    const opt = camSel.options[camSel.selectedIndex];
+    if (!d) { camHint.textContent = ''; camHint.className = 'hint'; return; }
+    if (camSel.value === 'auto') {
+      camHint.textContent = `按当前场地，相机需覆盖最远工作距离约 ${d.toFixed(1)}m（${mk}标记），自动推荐将据此选型`;
+      camHint.className = 'hint';
+      return;
+    }
+    const rng = parseFloat(active ? opt.dataset.da : opt.dataset.dp);
+    if (rng < d) {
+      camHint.textContent = `⚠ ${camSel.value} ${active ? '主动' : '被动'}识别距离 ${rng}m ＜ 场地最远工作距离 ${d.toFixed(1)}m，距离不满足，请改用“自动推荐”或更高档型号`;
+      camHint.className = 'hint warn';
+    } else if (rng < 1.2 * d) {
+      camHint.textContent = `△ ${camSel.value} ${active ? '主动' : '被动'}识别距离 ${rng}m，相对场地需求 ${d.toFixed(1)}m 余量不足 20%，建议升档`;
+      camHint.className = 'hint warn';
+    } else {
+      camHint.textContent = `✓ ${camSel.value} ${active ? '主动' : '被动'}识别距离 ${rng}m，覆盖场地最远工作距离 ${d.toFixed(1)}m，满足要求`;
+      camHint.className = 'hint ok';
+    }
+  }
+  [camSel, inL, inW, inH].forEach(el => el.addEventListener('input', checkCamRange));
+  markerSel.addEventListener('change', checkCamRange);
+  checkCamRange();
+</script>
+</body>
+</html>

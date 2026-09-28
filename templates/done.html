@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>生成成功</title>
+<style>
+  :root {
+    --primary: #1677FF; --primary-dark: #0E5FD9; --primary-light: #69B1FF;
+    --bg: #F7F8FA; --card: #FFFFFF; --ink: #1A1A1A; --label: #333333;
+    --muted: #999999; --line: #E5E7EB; --radius: 16px;
+    --shadow: 0 4px 12px rgba(0,0,0,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(1000px 420px at 80% -10%, rgba(22,119,255,.07), transparent 60%);
+    background-attachment: fixed;
+    color: var(--ink); margin: 0; min-height: 100vh;
+  }
+  .wrap { max-width: 640px; margin: 72px auto; background: var(--card);
+          border-radius: var(--radius); box-shadow: var(--shadow);
+          padding: 44px 44px 36px; }
+  .badge { width: 60px; height: 60px; margin: 0 auto 18px; border-radius: 50%;
+           background: linear-gradient(135deg, #22C55E, #4ADE80);
+           display: flex; align-items: center; justify-content: center;
+           box-shadow: 0 8px 20px rgba(34,197,94,.30); }
+  .badge svg { width: 30px; height: 30px; }
+  h1 { color: var(--ink); font-size: 21px; font-weight: 800; text-align: center;
+       margin: 0 0 22px; letter-spacing: .5px; }
+  .meta { background: #F7F9FC; border: 1px solid #EEF1F6; border-radius: 12px;
+          padding: 14px 18px; margin-bottom: 26px; }
+  .meta .row { font-size: 13px; color: var(--label); margin: 7px 0;
+               word-break: break-all; line-height: 1.6; }
+  .meta .k { color: var(--muted); display: inline-block; width: 72px; font-weight: 600; }
+  .btns { text-align: center; }
+  a.btn {
+    display: inline-block; text-decoration: none; border-radius: 10px;
+    padding: 12px 26px; font-size: 14px; font-weight: 700; margin: 6px 5px 0;
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  }
+  a.btn:not(.ghost) {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff; box-shadow: 0 6px 18px rgba(22,119,255,.30);
+  }
+  a.btn:not(.ghost):hover { transform: translateY(-2px); filter: brightness(1.06);
+                            box-shadow: 0 10px 24px rgba(22,119,255,.38); }
+  a.ghost { background: #F0F4FA; color: var(--primary-dark); border: 1px solid #E3EAF5; }
+  a.ghost:hover { background: #E7EEF9; }
+  .tip { font-size: 12px; color: var(--muted); text-align: center;
+         margin-top: 22px; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 6 9 17l-5-5"/>
+    </svg>
+  </div>
+  <h1>方案已生成</h1>
+  <div class="meta">
+    <div class="row"><span class="k">文件名</span>{{ fname }}</div>
+    <div class="row"><span class="k">保存位置</span>{{ folder }}</div>
+  </div>
+  <div class="btns">
+    <a class="btn" href="/open/{{ fname }}">查看报告</a>
+    <a class="btn ghost" href="/open_folder/{{ fname }}">打开所在文件夹</a>
+    <a class="btn ghost" href="/download/{{ fname }}">下载副本</a>
+    <a class="btn ghost" href="/">再生成一份</a>
+  </div>
+  <div class="tip">「查看报告」将用系统默认的 Word/WPS 打开文件；也可到上方文件夹路径中查找全部历史方案。</div>
+</div>
+</body>
+</html>

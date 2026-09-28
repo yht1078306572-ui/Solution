@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 生成产物
+output/
+build/
+dist/
+*.zip
+*.log
+
+# 原始培训素材（体积大，不入库）
+assets_raw/
+
+# 本机快捷方式（含本机绝对路径）
+*.lnk
+
+# Office 临时文件
+~$*
