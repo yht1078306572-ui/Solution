@@ -4,11 +4,12 @@
 
 > ## 📦 下载免安装版（exe）
 >
-> **[⬇️ CMSolution_v1.0.0_win_x64.zip（72MB，解压即用）](https://github.com/yht1078306572-ui/Solution/releases/download/v1.0.0/CMSolution_v1.0.0_win_x64.zip)**
+> **[⬇️ CMSolution_v1.0.1_win_x64.zip（72MB，解压即用）](https://github.com/yht1078306572-ui/Solution/releases/download/v1.0.1/CMSolution_v1.0.1_win_x64.zip)**
 >
 > 解压后双击 **CMSolution.exe**（需与 `_internal` 文件夹保持同级）。
 > ⚠️ 注意：页面右上角 Code → Download ZIP 下载的是**源码包**（需 Python 环境），
 > 免安装 exe 请使用上方链接或进入 [Releases 页](https://github.com/yht1078306572-ui/Solution/releases) 下载。
+> 版本变更见 [CHANGELOG](CHANGELOG.md)。
 
 ## 功能特性
 
