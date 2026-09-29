@@ -14,6 +14,7 @@ if not exist "dist\CMSolution\CMSolution.exe" (
 
 echo [2/4] Copying README into dist...
 copy /y "README.txt" "dist\CMSolution\README.txt" >nul
+copy /y "CMSolution使用说明.docx" "dist\CMSolution\CMSolution使用说明.docx" >nul
 
 echo [3/4] Cleaning output dir...
 if exist "dist\CMSolution\output" rd /s /q "dist\CMSolution\output"
