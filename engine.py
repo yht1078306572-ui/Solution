@@ -830,8 +830,7 @@ def build_config(form):
                       else "CMLOCK mini")
     elif sync_req in SYNC_MODELS:
         sync, sync_model = True, sync_req
-        if has_u and sync_model == "CMLOCK mini":
-            sync_model = "CMLOCK"     # 水下强制升级：招标要求 Genlock/Timecode/VESA
+        # 手动选择是否触碰硬门槛，由布局确定后的“同步机选型复核”统一判定
     else:
         sync, sync_model = bool(form.get("sync", True)), "CMLOCK"
     if "sync" in form and not form.get("sync") and form.get("sync_model") is None:
@@ -910,6 +909,42 @@ def build_config(form):
         else:
             cfg["cam_assign"] = [(x, y, z, cam) for (x, y, z) in layout["positions"]]
             cfg["cam_counts"] = {cam: n_total}
+
+    # 同步机选型复核（CMLOCK 系列选型说明 V1.0）：
+    # 硬门槛 Genlock/Timecode/VESA、通用同步超 1 入 1 出或扩容、机架集中 → CMLOCK；
+    # 单路主动光同步/开关量/补光灯联动 → CMLOCK mini；水下强制 CMLOCK
+    if sync:
+        n_dev = cfg["layout"]["n_total"] + (1 if scene_key == "embodied" else 0)
+        multi_ch = n_dev > 16                   # 大阵列：多路同步/扩容需求（硬门槛 2）
+        need_lock = scene_key in SCENE_SYNC_DEFAULT or has_u or multi_ch
+        if scene_key == "xr":
+            lock_why = "虚拟拍摄需 Genlock 锁相与 Timecode 时码（硬门槛，不可降配）"
+        elif scene_key == "human":
+            lock_why = "影视工作流需 Timecode 时码对齐（硬门槛，不可降配）"
+        elif scene_key == "custom":
+            lock_why = "定制项目多路同步、机架集中部署与状态管理要求"
+        elif has_u:
+            lock_why = "水下项目要求 Genlock/Timecode/VESA 接口（水下接入盒链路）"
+        else:
+            lock_why = f"阵列共 {n_dev} 台设备，通用同步超出 1 入 1 出且存在扩容需求"
+        if sync_req == "auto":
+            if need_lock and sync_model == "CMLOCK mini":
+                sync_model = "CMLOCK"
+                cfg["opts"]["sync_model"] = "CMLOCK"
+            reason = (f"同步机自动选型说明：{lock_why}，故推荐 CMLOCK。"
+                      if need_lock else
+                      "同步机自动选型说明：本场景为单路通用同步需求，不涉及 Genlock/Timecode/"
+                      "VESA 与多路扩容，CMLOCK mini 即可覆盖（含开关量/补光灯联动），"
+                      "方案更轻量、成本更优。")
+            cfg["cam_reason"] = (cfg["cam_reason"] + " " + reason).strip()
+        elif need_lock and sync_model == "CMLOCK mini":
+            # 手动选择触碰硬门槛：强制升级并在报告中说明（水下此前已升级，此处兜底）
+            cfg["opts"]["sync_model"] = sync_model = "CMLOCK"
+            cfg["cam_reason"] = (cfg["cam_reason"] + " ⚠ 同步机选型复核：手动选择的 "
+                                 f"CMLOCK mini 不满足本项目同步需求——{lock_why}；"
+                                 "依据 CMLOCK 系列选型规则（硬门槛不可降配），"
+                                 "本方案已按 CMLOCK 配置。").strip()
+        cfg["bom_sync_final"] = sync_model
 
     # 选型-场地距离校核：任何所选型号识别距离不足即告警（含混用第二型号）
     d_req = required_range(L, W, H)

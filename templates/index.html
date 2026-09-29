@@ -388,13 +388,13 @@
         </div>
         <div class="col">
           <label>同步机</label>
-          <select name="sync_model">
+          <select name="sync_model" id="sync_model">
             <option value="auto">自动推荐（按方案类型）</option>
             <option value="CMLOCK">CMLOCK（6 入 6 出+Genlock/Timecode/VESA，机架式）</option>
             <option value="CMLOCK mini">CMLOCK mini（单路同步+开关量/补光灯联动，轻量）</option>
             <option value="none">不配置</option>
           </select>
-          <div class="hint">虚拍/影视工作流自动配 CMLOCK，其余场景默认 mini</div>
+          <div class="hint" id="sync_hint">虚拍/影视工作流自动配 CMLOCK，其余场景默认 mini</div>
         </div>
       </div>
     </fieldset>
@@ -499,9 +499,101 @@
       camHint.className = 'hint ok';
     }
   }
+  // 同步机选型实时校核：按场景同步需求匹配 CMLOCK / CMLOCK mini
+  // 需求依据：Genlock 锁相（虚拍）、Timecode 时码（影视）、多路同步与可靠性（定制）、
+  // 水下接入盒链路（水下）→ 必须 CMLOCK；其余单路通用同步场景 mini 即可
+  const syncSel = document.getElementById('sync_model');
+  const syncHint = document.getElementById('sync_hint');
+  const SYNC_NEED = {
+    xr: { need: 'CMLOCK', why: '虚拟拍摄需 Genlock 锁相 + Timecode 时码，mini 无此接口' },
+    human: { need: 'CMLOCK', why: '影视工作流需 Timecode 时码对齐，mini 无此接口' },
+    custom: { need: 'CMLOCK', why: '定制项目多路同步与 7×24 可靠性要求' },
+    underwater: { need: 'CMLOCK', why: '水下接入盒链路强制要求 CMLOCK' },
+  };
+  function checkSync() {
+    const sk = sceneSel.value;
+    const req = SYNC_NEED[sk];
+    const rec = req ? req.need : 'CMLOCK mini';
+    const recWhy = req ? req.why : '本场景为单路通用同步需求，mini 即可满足（含开关量/补光灯联动）';
+    const v = syncSel.value;
+    if (v === 'auto') {
+      syncHint.textContent = `按当前方案类型推荐 ${rec}：${recWhy}`
+        + (req ? '' : '；相机阵列＞16 台时将自动升级为 CMLOCK（多路同步/扩容硬门槛）');
+      syncHint.className = 'hint';
+    } else if (v === 'none') {
+      syncHint.textContent = '△ 不配置同步机：多相机与外部设备将无统一时基，仅建议单机位/演示场景';
+      syncHint.className = 'hint warn';
+    } else if (v === rec) {
+      syncHint.textContent = `✓ ${v} 与本场景同步需求匹配（${recWhy}）`;
+      syncHint.className = 'hint ok';
+    } else {
+      syncHint.textContent = req
+        ? `⚠ 本场景要求 CMLOCK（${req.why}），当前选择 ${v} 不满足，建议改选 CMLOCK 或“自动推荐”`
+        : `△ ${v} 可用于本场景，但 ${rec} 已满足需求（${recWhy}），存在配置富余`;
+      syncHint.className = 'hint warn';
+    }
+  }
+  syncSel.addEventListener('change', checkSync);
+  sceneSel.addEventListener('change', checkSync);
+  checkSync();
+
   [camSel, inL, inW, inH].forEach(el => el.addEventListener('input', checkCamRange));
   markerSel.addEventListener('change', checkCamRange);
   checkCamRange();
+
+  // 覆盖不足硬告警：点击生成时弹确认框，确认后才继续
+  const form = document.querySelector('form');
+  const warnMask = document.getElementById('warn_mask');
+  const warnText = document.getElementById('warn_text');
+  let forceSubmit = false;
+  form.addEventListener('submit', function (e) {
+    if (forceSubmit) return;
+    const d = reqRange();
+    if (camSel.value === 'auto' || !d) return;
+    const active = markerSel.value === 'active';
+    const opt = camSel.options[camSel.selectedIndex];
+    const rng = parseFloat(active ? opt.dataset.da : opt.dataset.dp);
+    if (rng < d) {
+      e.preventDefault();
+      warnText.innerHTML = `当前选型 <b>${camSel.value}</b>（${active ? '主动' : '被动'}识别距离 <b>${rng}m</b>）`
+        + `无法满足场地最远工作距离 <b>${d.toFixed(1)}m</b> 的要求，`
+        + `生成方案中相机将无法覆盖全部工作区域。<br><br>建议改用“自动推荐”或更高档型号。确认仍按当前配置生成吗？`;
+      warnMask.style.display = 'flex';
+    }
+  });
+  document.getElementById('warn_cancel').addEventListener('click', () => {
+    warnMask.style.display = 'none';
+  });
+  document.getElementById('warn_ok').addEventListener('click', () => {
+    warnMask.style.display = 'none';
+    forceSubmit = true;
+    form.requestSubmit();
+  });
 </script>
+
+<!-- 覆盖不足确认弹窗 -->
+<div id="warn_mask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);
+     z-index:99;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);
+       max-width:440px;width:88%;padding:26px 28px 20px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:36px;height:36px;border-radius:50%;flex:none;
+           background:linear-gradient(135deg,#F59E0B,#FBBF24);
+           display:flex;align-items:center;justify-content:center;
+           color:#fff;font-size:20px;font-weight:800;">!</div>
+      <div style="font-size:16px;font-weight:800;color:#1A1A1A;">相机覆盖不足警示</div>
+    </div>
+    <div id="warn_text" style="font-size:13px;color:#444;line-height:1.8;"></div>
+    <div style="text-align:right;margin-top:18px;">
+      <button type="button" id="warn_cancel"
+        style="background:#F0F4FA;color:#0E5FD9;border:1px solid #E3EAF5;border-radius:9px;
+        padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">返回修改</button>
+      <button type="button" id="warn_ok"
+        style="background:linear-gradient(135deg,#F59E0B,#F97316);color:#fff;border:none;
+        border-radius:9px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;
+        box-shadow:0 4px 12px rgba(245,158,11,.35);">确认生成</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
