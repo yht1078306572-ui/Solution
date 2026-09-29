@@ -7,6 +7,10 @@ import datetime
 import math
 import os
 import sys
+import tempfile
+
+TMPIMG = os.path.join(tempfile.gettempdir(), "cmsolution_img")
+os.makedirs(TMPIMG, exist_ok=True)
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -90,7 +94,7 @@ class RW:
         self.section = 0
         self.toc = []
         self._toc_anchor = None
-        self._out_dir = os.path.dirname(out_path)
+        self._out_dir = TMPIMG          # 中间配图写系统临时目录，不占输出目录、无需清理
         self._base = os.path.splitext(os.path.basename(out_path))[0]
         self._used_imgs = set()   # 全文图片去重（按文件名）
 
@@ -415,6 +419,13 @@ def ch_studio(rw):
          "保证演员在任意姿态、任意位置下全身标记点至少被 3 台相机同时可见，"
          "满足影视级连续动作的数据完整性要求。")
     rw.h2("贴点方案与动捕服")
+    _mt = cfg["opts"].get("marker_type", "active" if cfg["opts"].get("active_marker") else "passive")
+    if _mt == "active":
+        rw.p("注意：本方案选择主动光标记体路线。主动光标记体仅适用于刚体追踪"
+             "（道具、器械、摄影机定位套件），不适用于人体骨骼贴点——"
+             "人体全身动作捕捉须采用被动反光标记点，建议改用“被动反光标记点”或"
+             "“主被动混用”标记路线。以下按人体骨骼捕捉的被动贴点方案说明，"
+             "道具等刚体按主动光标记体部署。")
     rw.p("推荐青瞳标准 53 点贴点方式：被测人体身穿毛面动捕服（CMSUIT，莱卡材质，"
          "轻便高弹、可反复粘贴），在各关节及关节连接处粘贴标准 12mm 反光球；"
          "标记点位置与人体骨骼模型一一对应，支持自动骨骼生成。")
@@ -543,16 +554,20 @@ INTEGRATED_PRODUCTS = {
         intro="机器人定位系统的价值体现在与被测机器人本体的深度集成。系统支持全类型"
               "机器人平台接入，以下为典型集成对象与集成方式。",
         items=[
-            ("移动机器人 / AGV 平台", "int_robot_body.jpeg",
-             "轮式/履带式移动机器人与 AGV：在机身顶部与底盘部署标记刚体，实时输出"
-             "六自由度位姿真值，用于 SLAM 与导航算法验证、轨迹精度评估、出厂一致性"
+            ("移动机器人 / AGV / 复合机器人平台", "int_robot_arm.png",
+             "轮式/履带式移动机器人、AGV 及臂-车复合机器人：在机身顶部与底盘部署标记刚体，"
+             "实时输出六自由度位姿真值，用于 SLAM 与导航算法验证、轨迹精度评估、出厂一致性"
              "检测；刚体构型按机身结构定制，不影响机器人原有传感器布局。",
-             "图  移动机器人本体（标记刚体集成）"),
-            ("机械臂 / 桁架机器人工作单元", "int_robot_cell.jpeg",
-             "机械臂各连杆分段布点、末端执行器 3-4 点构型，结合桁架式相机阵列实现"
-             "全行程无遮挡覆盖，用于轨迹精度、重复定位精度标定与动态特性分析；"
-             "可与机器人控制器经 SDK/ROS 实时闭环。",
-             "图  桁架机器人工作单元与顶部相机阵列"),
+             "图  复合机器人平台（移动底盘+机械臂整机追踪）"),
+            ("机械臂标记点部署", "int_robot_mark.png",
+             "机械臂各连杆分段布点、末端执行器 3-4 点构型，标记点部署位置按关节结构规划"
+             "（图示红色点位），结合环绕相机阵列实现全行程无遮挡覆盖，用于轨迹精度、"
+             "重复定位精度标定与动态特性分析；可与机器人控制器经 SDK/ROS 实时闭环。",
+             "图  机械臂标记点部署位置示意"),
+            ("末端执行器与夹具", "int_robot_gripper.png",
+             "吸盘、夹爪等末端执行器按刚体建模贴点，结合工件标记点实现手-物协同操作"
+             "全过程记录，支撑抓取精度评估与装配工艺验证。",
+             "图  末端执行器（吸盘夹具）标记集成"),
         ]),
     "drone": dict(
         intro="无人机定位方案的核心是“无人机平台 + 标记载荷 + 大空间实验场”的完整"
@@ -681,13 +696,13 @@ INTEGRATED_PRODUCTS = {
             ("特种设备与运动机构", "int_custom_zipline.jpeg",
              "飞索、导轨、滑台等特种运动机构：沿运动路径分段布置相机阵列与"
              "锚点标记，运动体按刚体建模，实现全行程位姿与速度的高精度测量，"
-             "室外/半室外工况以主动标记体保证回波稳定。",
-             "图  特种设备现场（飞索定位系统）"),
-            ("桁架导轨与大型实验装置", "int_custom_rig.jpeg",
-             "大型桁架、导轨与实验装置按结构特点定制支架与布点方案，"
-             "阵列一次标定长期稳定运行；复杂结构遮挡以多层部署与补盲机位消解，"
-             "满足国家级实验装置的连续运行要求。",
-             "图  桁架导轨实验装置"),
+             "室外/半室外工况以主动光标记体保证回波稳定。",
+             "图  特种设备现场（飞索定位系统，主动式标记）"),
+            ("桁架导轨与大型实验装置", "int_custom_truss.jpeg",
+             "大型桁架、导轨与实验装置按结构特点定制支架与布点方案（图示为实验室"
+             "桁架装置与顶部相机阵列，主动式标记体跟踪），阵列一次标定长期稳定运行；"
+             "复杂结构遮挡以多层部署与补盲机位消解，满足国家级实验装置的连续运行要求。",
+             "图  桁架实验装置与顶部相机阵列（主动式标记体）"),
         ]),
 }
 
@@ -1731,31 +1746,53 @@ def ch_scheme(rw):
         _cam_section(cfg["cam"], cam)
 
     rw.h2("标记点部署")
-    rw.p(scene["markers"])
+    _mt = cfg["opts"].get("marker_type", "active" if cfg["opts"].get("active_marker") else "passive")
+    if _mt == "active":
+        rw.p("本方案采用主动光标记体路线：标记体自发光（不受环境光与距离回波衰减限制）、"
+             "可编码 ID（多目标身份识别稳定）、内置 IMU 与光学数据光惯融合"
+             "（局部遮挡时轨迹保持连续）。主动光标记体仅适用于刚体追踪"
+             "（无人机、机器人本体、道具、摄影机定位套件等），按每刚体不少于 3 个标记体、"
+             "构型互异且不共面部署；不适用于人体骨骼贴点——骨骼捕捉须采用被动反光标记点。")
+        rw.p("主动光产品族按应用场景选型：PUCK 主动光刚体（7 颗 850nm 红外灯珠、≤100g、"
+             "续航>120min，适合无人机等轻量机载）；F3 主动光模块盒（内置电池、16 路 LED、"
+             "可编码 ID，适合道具与机器人本体）；F1-EDG 主动光模块盒（8 路高功率 LED、"
+             "9 轴 IMU 1000Hz、24V DC 带锁供电，适合大空间/室外固定部署）；"
+             "均支持光同步与无线同步，亮度可调。")
+    elif _mt == "hybrid":
+        rw.p("本方案采用主被动混用路线：刚体目标（道具、设备、定位套件）采用主动光标记体"
+             "（自发光、可编码 ID、光惯融合），人体骨骼与精细部位采用被动反光标记点；"
+             "两类标记在同一相机阵列下协同捕捉，目标身份以构型与编码 ID 双重区分。")
+        rw.p(scene["markers"])
+    else:
+        rw.p(scene["markers"])
     if cfg.get("detail") == "full":
         rw.p("标记点布点设计遵循四项原则：一是不共面原则，同一刚体的标记点不得在一条直线"
              "或同一平面内，以保证姿态解算唯一性；二是非对称原则，各刚体构型互异，避免多"
              "目标身份混叠；三是刚性原则，标记点与载体刚性连接，运动中无相对位移；四是"
              "可维护原则，标记点位置便于日常检查与更换。布点完成后在软件中建立刚体并核查"
              "各点间距离与构型稳定性。")
-    scene_marker_img = {
-        "embodied": ("marker_glove.jpeg", "图  手部标记点部署实拍（灵巧手/手指捕捉）"),
-        "drone": ("marker_drone.jpeg", "图  无人机机身标记点部署实拍"),
-        "robot": ("rigid_ref.jpeg", "图  刚体标记点阵列实拍"),
-    }
-    fname, cap = scene_marker_img.get(sk, (None, None))
-    if fname:   # human 的 53 点图在动捕棚专项章节展示
-        rw.img(fname, width_cm=8.5, caption=cap)
-    _mt = cfg["opts"].get("marker_type", "active" if cfg["opts"].get("active_marker") else "passive")
-    show_passive = not (sk == "drone" and _mt == "active")
-    if show_passive:
+    if _mt == "active":
+        rw.img("active_marker.png", width_cm=6.5,
+               caption="图  主动光标记体（自发光、可编码 ID、内置 IMU，刚体专用）")
+    else:
+        scene_marker_img = {
+            "embodied": ("marker_glove.jpeg", "图  手部标记点部署实拍（灵巧手/手指捕捉）"),
+            "drone": ("marker_drone.jpeg", "图  无人机机身标记点部署实拍"),
+            "robot": ("rigid_ref.jpeg", "图  刚体标记点阵列实拍"),
+        }
+        fname, cap = scene_marker_img.get(sk, (None, None))
+        if fname:   # human 的 53 点图在动捕棚专项章节展示
+            rw.img(fname, width_cm=8.5, caption=cap)
         rw.img("marker_ball.jpeg", width_cm=5.5, caption="图  反光标记球（含底座）")
         rw.img("marker_sticker.jpeg", width_cm=5.5,
                caption="图  反光贴（轻小免固定，适合器械表面）")
+        if _mt == "hybrid":
+            rw.img("active_marker.png", width_cm=6.5,
+                   caption="图  主动光标记体（自发光、可编码 ID、内置 IMU，刚体专用）")
     if sk == "drone" and _mt in ("active", "hybrid"):
-        rw.p("主动式标记体（CMMC-RBA 系列）自发光、可编码 ID、内置 IMU 实现光惯融合，"
-             "安装于机架对角位置并保持不共面分布；小型无人机亦可选用 8-10mm 被动反光球，"
-             "无需供电、任意角度反射稳定。")
+        rw.p("主动式标记体（PUCK 主动光刚体）自发光、可编码 ID、支持光/无线同步，"
+             "整机≤100g、续航>120min，安装于机架对角位置并保持不共面分布；"
+             "小型无人机亦可选用 8-10mm 被动反光球，无需供电、任意角度反射稳定。")
     if sk == "robot":
         rw.img("pivot_calibration.png", width_cm=11, caption="图  重心标定示意图（光笔辅助）")
     if sk == "embodied":
@@ -1806,14 +1843,31 @@ def ch_accessories(rw):
          "按规则计入。")
 
     rw.h2("标记点与标记体")
-    rw.p("被动反光标记点是最常用的光学标记体：反光球（6/8/10/12mm 可选）精度高、回波"
-         "稳定，适合刚体与动捕服布点；反光贴轻小、免固定、不破坏器械表面，适合机器人"
-         "关节与曲面部位。主动光标记体自发光、可编码 ID、内置 IMU，适合大空间多目标与"
-         "无人机场景。配置规则：每个刚体至少 5 个标记点，另备 20% 损耗。")
-    rw.img("marker_ball.jpeg", width_cm=5.2, caption="图  反光标记球")
-    rw.img("marker_sticker.jpeg", width_cm=5.2, caption="图  反光贴")
-    rw.img("active_marker.png", width_cm=6.5,
-           caption="图  主动光标记体（自发光、可编码 ID、内置 IMU）")
+    _mt = cfg["opts"].get("marker_type", "active" if cfg["opts"].get("active_marker") else "passive")
+    if _mt == "active":
+        rw.p("本方案配置主动光标记体：自发光、不受环境光限制、可编码 ID、支持光同步与无线"
+             "同步。产品族按场景选型：PUCK 主动光刚体（7 颗 850nm 红外灯珠、≤100g、"
+             "续航>120min，轻量机载）；F3 主动光模块盒（内置电池、16 路 LED、可编码 ID）；"
+             "F1-EDG 主动光模块盒（8 路高功率 LED、9 轴 IMU 1000Hz、24V DC）。"
+             "适用于刚体追踪（无人机、机器人、道具、摄影机定位套件等），不适用人体骨骼"
+             "贴点。配置规则：每刚体不少于 3 个标记体、构型互异不共面，另备 20% 损耗。")
+        rw.img("active_marker.png", width_cm=6.5,
+               caption="图  主动光标记体（自发光、可编码 ID、内置 IMU）")
+    elif _mt == "hybrid":
+        rw.p("本方案主被动混用：刚体目标采用主动光标记体（自发光、可编码 ID、内置 IMU），"
+             "人体骨骼与精细部位采用被动反光标记点（反光球 6/8/10/12mm 与反光贴）。"
+             "配置规则：每个刚体至少 5 个标记点，另备 20% 损耗。")
+        rw.img("marker_ball.jpeg", width_cm=5.2, caption="图  反光标记球")
+        rw.img("marker_sticker.jpeg", width_cm=5.2, caption="图  反光贴")
+        rw.img("active_marker.png", width_cm=6.5,
+               caption="图  主动光标记体（自发光、可编码 ID、内置 IMU）")
+    else:
+        rw.p("本方案配置被动反光标记点：反光球（6/8/10/12mm 可选）精度高、回波"
+             "稳定，适合刚体与动捕服布点；反光贴轻小、免固定、不破坏器械表面，适合机器人"
+             "关节与曲面部位。被动标记点无需供电、任意角度反射稳定，是骨骼捕捉与常规"
+             "室内场景的标准配置。配置规则：每个刚体至少 5 个标记点，另备 20% 损耗。")
+        rw.img("marker_ball.jpeg", width_cm=5.2, caption="图  反光标记球")
+        rw.img("marker_sticker.jpeg", width_cm=5.2, caption="图  反光贴")
 
     if sk == "human":
         rw.h2("动捕服与穿戴配件")
@@ -2256,20 +2310,24 @@ def ch_product(rw):
     rw.h2("标记体与穿戴设备")
     rows = [["设备", "规格", "说明"]]
     sk = cfg["scene"]
+    _mt = cfg["opts"].get("marker_type",
+                          "active" if cfg["opts"].get("active_marker") else "passive")
     if sk == "xr":
         rows.append(["摄像机定位套件", "9 轴 IMU，0.01mm/0.01°，Genlock/Timecode，"
                      "镜头编码器（Zoom/Focus），FreeD 输出，断电记忆",
                      "摄影机 6DoF 定位与镜头参数采集"])
-    if sk == "drone" and cfg["opts"].get("marker_type",
-           "active" if cfg["opts"].get("active_marker") else "passive") in ("active", "hybrid"):
-        rows.append(["主动光标记体", "自发光、可编码 ID、内置 6 轴 IMU，追踪距离≥40m",
-                     "大空间多目标，光惯融合"])
     if sk == "human":
         rows.append(["动捕服 CMSUIT", "莱卡毛面，可反复粘贴 1000 次以上，XS-XL 全尺寸",
                      "含配套反光点（每套 60 个）"])
         rows.append(["动捕标记点", "Ø12mm 反光球", "53 点贴点方式"])
     else:
-        rows.append(["反光标记点", "Ø6/8/10/12mm 反光球/反光贴", "刚体布点，每刚体≥5 点"])
+        if _mt in ("passive", "hybrid"):
+            rows.append(["反光标记点", "Ø6/8/10/12mm 反光球/反光贴",
+                         "刚体布点，每刚体≥5 点"])
+        if _mt in ("active", "hybrid"):
+            rows.append(["主动光标记体",
+                         "PUCK / F3 / F1-EDG（自发光、可编码 ID、光/无线同步、内置 IMU）",
+                         "刚体追踪，每刚体≥3 个、构型互异不共面"])
     gm = cfg["opts"].get("glove_model") or ""
     if gm == "Feeler":
         rows.append(["Feeler 数据手套", "光惯融合，手指关节捕捉", "遮挡下 IMU 保持连续"])

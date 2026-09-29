@@ -5,11 +5,11 @@ import os
 import subprocess
 import uuid
 
-from flask import Flask, redirect, render_template, request, send_from_directory, url_for
+from flask import Flask, make_response, redirect, render_template, request, send_from_directory, url_for
 
 from diagrams import draw_side_view, draw_top_view
 from engine import CAMERAS, SCENES, build_config
-from report import build_docx
+from report import build_docx, TMPIMG
 
 import sys
 
@@ -34,7 +34,9 @@ def assets(fn):
 
 @app.route("/")
 def index():
-    return render_template("index.html", scenes=SCENES, cameras=CAMERAS)
+    resp = make_response(render_template("index.html", scenes=SCENES, cameras=CAMERAS))
+    resp.headers["Cache-Control"] = "no-store"     # 桌面 WebView2/浏览器禁用页面缓存
+    return resp
 
 
 @app.route("/generate", methods=["POST"])
@@ -46,8 +48,8 @@ def generate():
     form["ctags"] = request.form.getlist("ctag")
     cfg = build_config(form)
     uid = uuid.uuid4().hex[:8]
-    top = os.path.join(OUT, f"{uid}_top.png")
-    side = os.path.join(OUT, f"{uid}_side.png")
+    top = os.path.join(TMPIMG, f"{uid}_top.png")
+    side = os.path.join(TMPIMG, f"{uid}_side.png")
     draw_top_view(cfg, top)
     draw_side_view(cfg, side)
     safe_client = "".join(ch for ch in cfg["client"] if ch not in '\\/:*?"<>|') or "方案"
@@ -56,13 +58,7 @@ def generate():
     fname = f"{safe_client}-{safe_scene}-{uid}.docx"
     out = os.path.join(OUT, fname)
     build_docx(cfg, top, side, out)
-    # 清理中间配图：输出目录只保留 Word 方案文件
-    for f in (top, side):
-        if os.path.exists(f):
-            os.remove(f)
-    base = os.path.splitext(fname)[0]
-    for f in glob.glob(os.path.join(OUT, f"{base}_*.png")):
-        os.remove(f)
+    # 中间配图写入系统临时目录（TMPIMG），输出目录只含 Word，无需清理
     return redirect(url_for("done", fname=fname))
 
 

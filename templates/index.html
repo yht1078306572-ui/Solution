@@ -226,7 +226,7 @@
         </div>
         <div class="col" id="camn_wrap" style="display:none">
           <label>主型号数量（台）</label>
-          <input type="number" name="cam_n" min="4" value="12">
+          <input type="number" name="cam_n" min="4" value="12" step="1" data-int>
         </div>
       </div>
       <div class="row">
@@ -242,7 +242,7 @@
         </div>
         <div class="col" id="cam2n_wrap" style="display:none">
           <label>混用型号数量（台）</label>
-          <input type="number" name="cam2_n" min="1" value="4">
+          <input type="number" name="cam2_n" min="1" value="4" step="1" data-int>
           <div class="hint" id="cam2n_hint">自动模式下从总量中拨出该数量</div>
         </div>
       </div>
@@ -272,14 +272,14 @@
         <div class="col">
           <label>布置层数</label>
           <select name="layers">
-            <option value="0">自动（高度＞6m 两层）</option>
+            <option value="0">自动（高度≥6m 两层）</option>
             <option value="1">单层</option>
             <option value="2">两层</option>
             <option value="3">三层</option>
           </select>
         </div>
       </div>
-      <div class="hint">按捕捉区域净空间填写；部署规则将据此自动计算相机数量与布局。场地高度＞6m 时自动按两层立体部署，相机数量成倍增加。</div>
+      <div class="hint">按捕捉区域净空间填写；部署规则将据此自动计算相机数量与布局。场地高度≥6m 时自动按两层立体部署，相机数量成倍增加。</div>
     </fieldset>
 
     <div class="scene-opt" data-scene="robot">
@@ -292,7 +292,7 @@
     <div class="scene-opt" data-scene="drone" style="display:none">
       <div class="ttl">无人机选项</div>
       <div class="row">
-        <div class="col"><label>追踪目标数量</label><input type="number" name="targets" min="1" value="2"></div>
+        <div class="col"><label>追踪目标数量</label><input type="number" name="targets" min="1" value="2" step="1" data-int></div>
         <div class="col" style="align-self:end">
           <div class="hint">标记点类型在下方“通用选项”中选择；大空间/集群推荐主动光标记体（含 IMU，可编码 ID）。</div>
         </div>
@@ -302,7 +302,7 @@
     <div class="scene-opt" data-scene="human" style="display:none">
       <div class="ttl">人体/影视动捕选项</div>
       <div class="row">
-        <div class="col"><label>同时捕捉人数</label><input type="number" name="persons" min="1" value="1"></div>
+        <div class="col"><label>同时捕捉人数</label><input type="number" name="persons" min="1" value="1" step="1" data-int></div>
       </div>
       <div class="chks">
         <label class="chk"><input type="checkbox" name="render_server">增配渲染服务器（实时驱动数字人/虚拍）</label>
@@ -318,7 +318,7 @@
     <div class="scene-opt" data-scene="vr" style="display:none">
       <div class="ttl">VR 大空间选项</div>
       <div class="row">
-        <div class="col"><label>同场人数</label><input type="number" name="persons" min="1" value="4"></div>
+        <div class="col"><label>同场人数</label><input type="number" name="persons" min="1" value="4" step="1" data-int></div>
       </div>
       <div class="hint">支持多人同场（可扩展至百人）；标记点按“头显+双手柄”每套刚体配置，虚实道具按批定制。</div>
     </div>
@@ -326,7 +326,7 @@
     <div class="scene-opt" data-scene="xr" style="display:none">
       <div class="ttl">XR/VP 虚拟拍摄选项</div>
       <div class="row">
-        <div class="col"><label>拍摄机位数量</label><input type="number" name="targets" min="1" value="1"></div>
+        <div class="col"><label>拍摄机位数量</label><input type="number" name="targets" min="1" value="1" step="1" data-int></div>
       </div>
       <div class="hint">按 LED 屏宽=场地长边设计：顶部弧形阵列+侧向补盲+外围灯架；每机位配 1 套摄像机定位套件；默认含渲染与合成服务器。</div>
     </div>
@@ -334,7 +334,7 @@
     <div class="scene-opt" data-scene="underwater" style="display:none">
       <div class="ttl">水下动捕选项</div>
       <div class="row">
-        <div class="col"><label>追踪目标数量</label><input type="number" name="targets" min="1" value="1"></div>
+        <div class="col"><label>追踪目标数量</label><input type="number" name="targets" min="1" value="1" step="1" data-int></div>
       </div>
       <div class="hint">场地按水池尺寸填写（高 = 水深）。默认 U4 蓝光相机双层环绕部署（上层近水面+中层平视），自动配 UWConnectionUnit 接入盒、防水电缆、水下固定套件与蓝光标记点。</div>
     </div>
@@ -389,12 +389,19 @@
         <div class="col">
           <label>同步机</label>
           <select name="sync_model" id="sync_model">
+            <option value="none">不配置（默认，需要时再选配）</option>
             <option value="auto">自动推荐（按方案类型）</option>
             <option value="CMLOCK">CMLOCK（6 入 6 出+Genlock/Timecode/VESA，机架式）</option>
             <option value="CMLOCK mini">CMLOCK mini（单路同步+开关量/补光灯联动，轻量）</option>
-            <option value="none">不配置</option>
           </select>
-          <div class="hint" id="sync_hint">虚拍/影视工作流自动配 CMLOCK，其余场景默认 mini</div>
+          <div class="hint" id="sync_hint">默认不配置；涉 Genlock/Timecode/多路同步需求时再选配</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label class="chk" style="margin-top:4px;"><input type="checkbox" name="truss">
+            增配桁架系统（相机顶部安装固定，非必须）</label>
+          <div class="hint">铝合金快装桁架+吊装件，按场地顶部环绕一圈配置，高度可调</div>
         </div>
       </div>
     </fieldset>
@@ -403,6 +410,31 @@
       <button type="submit">生成方案 Word</button>
     </div>
   </form>
+</div>
+
+<!-- 覆盖不足确认弹窗（须在 script 之前，脚本同步执行需先存在） -->
+<div id="warn_mask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);
+     z-index:99;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);
+       max-width:440px;width:88%;padding:26px 28px 20px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:36px;height:36px;border-radius:50%;flex:none;
+           background:linear-gradient(135deg,#F59E0B,#FBBF24);
+           display:flex;align-items:center;justify-content:center;
+           color:#fff;font-size:20px;font-weight:800;">!</div>
+      <div style="font-size:16px;font-weight:800;color:#1A1A1A;">相机覆盖不足警示</div>
+    </div>
+    <div id="warn_text" style="font-size:13px;color:#444;line-height:1.8;"></div>
+    <div style="text-align:right;margin-top:18px;">
+      <button type="button" id="warn_cancel"
+        style="background:#F0F4FA;color:#0E5FD9;border:1px solid #E3EAF5;border-radius:9px;
+        padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">返回修改</button>
+      <button type="button" id="warn_ok"
+        style="background:linear-gradient(135deg,#F59E0B,#F97316);color:#fff;border:none;
+        border-radius:9px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;
+        box-shadow:0 4px 12px rgba(245,158,11,.35);">确认生成</button>
+    </div>
+  </div>
 </div>
 <script>
   const sceneSel = document.getElementById('scene');
@@ -521,8 +553,10 @@
         + (req ? '' : '；相机阵列＞16 台时将自动升级为 CMLOCK（多路同步/扩容硬门槛）');
       syncHint.className = 'hint';
     } else if (v === 'none') {
-      syncHint.textContent = '△ 不配置同步机：多相机与外部设备将无统一时基，仅建议单机位/演示场景';
-      syncHint.className = 'hint warn';
+      syncHint.textContent = req
+        ? `△ 当前不配置同步机；注意本场景通常需要 ${req.need}（${req.why}），如确认无外部同步需求可继续`
+        : '默认不配置同步机；如涉及 Genlock/Timecode/多路同步或外部设备时码需求，再选配';
+      syncHint.className = req ? 'hint warn' : 'hint';
     } else if (v === rec) {
       syncHint.textContent = `✓ ${v} 与本场景同步需求匹配（${recWhy}）`;
       syncHint.className = 'hint ok';
@@ -541,7 +575,21 @@
   markerSel.addEventListener('change', checkCamRange);
   checkCamRange();
 
-  // 覆盖不足硬告警：点击生成时弹确认框，确认后才继续
+  // 数量类输入强制整数（相机数量/人数/目标数/机位数）：只允许数字，小数点直接剔除
+  document.querySelectorAll('input[data-int]').forEach(el => {
+    el.addEventListener('input', () => {
+      const v = el.value.replace(/[^\d]/g, '');
+      if (el.value !== v) el.value = v;
+    });
+    el.addEventListener('blur', () => {
+      if (el.value === '' || parseInt(el.value, 10) < 1) el.value = el.min || 1;
+    });
+  });
+
+  // 覆盖不足警示弹窗：⚠距离不满足 或 △余量<20% 时须确认
+  // 规则：①R3 为参考相机（AI 无标记），不参与追踪覆盖校核；
+  //       ②混用多型号为联合覆盖，任一台满足全场距离即不弹窗；
+  //       ③仅当（单台）或（混用且无一满足）时才逐台列出问题
   const form = document.querySelector('form');
   const warnMask = document.getElementById('warn_mask');
   const warnText = document.getElementById('warn_text');
@@ -549,17 +597,34 @@
   form.addEventListener('submit', function (e) {
     if (forceSubmit) return;
     const d = reqRange();
-    if (camSel.value === 'auto' || !d) return;
+    if (!d) return;
     const active = markerSel.value === 'active';
-    const opt = camSel.options[camSel.selectedIndex];
-    const rng = parseFloat(active ? opt.dataset.da : opt.dataset.dp);
-    if (rng < d) {
-      e.preventDefault();
-      warnText.innerHTML = `当前选型 <b>${camSel.value}</b>（${active ? '主动' : '被动'}识别距离 <b>${rng}m</b>）`
-        + `无法满足场地最远工作距离 <b>${d.toFixed(1)}m</b> 的要求，`
-        + `生成方案中相机将无法覆盖全部工作区域。<br><br>建议改用“自动推荐”或更高档型号。确认仍按当前配置生成吗？`;
-      warnMask.style.display = 'flex';
+    const sels = [camSel, cam2].filter(s => s && s.value && s.value !== 'auto' && s.value !== 'R3');
+    const results = [];
+    for (const s of sels) {
+      const opt = s.options[s.selectedIndex];
+      const rng = parseFloat(active ? opt.dataset.da : opt.dataset.dp);
+      if (rng) results.push({ name: s.value, rng });
     }
+    if (!results.length) return;
+    // 混用联合覆盖：任一台满足全场距离 → 直接放行
+    if (results.length > 1 && results.some(r => r.rng >= d)) return;
+    const items = [];
+    for (const r of results) {
+      if (r.rng < d) {
+        items.push(`<b>${r.name}</b>（${active ? '主动' : '被动'}识别 <b>${r.rng}m</b>）`
+          + `<span style="color:#DC2626;font-weight:700;">无法满足</span>场地最远工作距离 <b>${d.toFixed(1)}m</b>，存在覆盖盲区`);
+      } else if (r.rng < 1.2 * d) {
+        items.push(`<b>${r.name}</b>（${active ? '主动' : '被动'}识别 <b>${r.rng}m</b>）`
+          + `相对场地需求 <b>${d.toFixed(1)}m</b> <span style="color:#D97706;font-weight:700;">余量不足 20%</span>，远距回波稳定性受限`);
+      }
+    }
+    if (!items.length) return;
+    e.preventDefault();
+    const hard = items.some(t => t.includes('无法满足'));
+    warnText.innerHTML = items.map(t => '• ' + t).join('<br>')
+      + `<br><br>建议改用“自动推荐”或更高档型号${hard ? '' : '，或改用主动光标记体'}。确认仍按当前配置生成吗？`;
+    warnMask.style.display = 'flex';
   });
   document.getElementById('warn_cancel').addEventListener('click', () => {
     warnMask.style.display = 'none';
@@ -570,30 +635,5 @@
     form.requestSubmit();
   });
 </script>
-
-<!-- 覆盖不足确认弹窗 -->
-<div id="warn_mask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);
-     z-index:99;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);
-       max-width:440px;width:88%;padding:26px 28px 20px;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-      <div style="width:36px;height:36px;border-radius:50%;flex:none;
-           background:linear-gradient(135deg,#F59E0B,#FBBF24);
-           display:flex;align-items:center;justify-content:center;
-           color:#fff;font-size:20px;font-weight:800;">!</div>
-      <div style="font-size:16px;font-weight:800;color:#1A1A1A;">相机覆盖不足警示</div>
-    </div>
-    <div id="warn_text" style="font-size:13px;color:#444;line-height:1.8;"></div>
-    <div style="text-align:right;margin-top:18px;">
-      <button type="button" id="warn_cancel"
-        style="background:#F0F4FA;color:#0E5FD9;border:1px solid #E3EAF5;border-radius:9px;
-        padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">返回修改</button>
-      <button type="button" id="warn_ok"
-        style="background:linear-gradient(135deg,#F59E0B,#F97316);color:#fff;border:none;
-        border-radius:9px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;
-        box-shadow:0 4px 12px rgba(245,158,11,.35);">确认生成</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>

@@ -158,7 +158,7 @@ EXT_SPECS = {
     "R3": dict(focus="6mm", aperture="F2.0", install="50m",
                cpu="AI 边缘计算处理器", indicator="多色 LED 状态灯", ip="IP44",
                cert="RoHS / CE / FCC",
-               features=["AI 无标记/有标记双模式，可外接麦克风",
+               features=["AI 无标记捕捉/被动标记捕捉双工模式，可外接麦克风",
                          "双 RJ45 级联，影像与光学数据同步采集",
                          "支持影像映射与重投影校验，辅助 AI 算法训练"]),
     "U4": dict(focus="12.5mm", aperture="F1.4 大光圈", install="水下 30m",
@@ -585,8 +585,9 @@ def compute_bom(cfg):
 
     # 水下相机接入盒（U 系列每台接入盒可接 3 台相机，汉江招标文件规则）
     if u_cams:
-        add("水下相机接入盒", "UWConnectionUnit", math.ceil(u_cams / 3), "个",
-            "Camera×3/LAN×2/DC×1，RJ45 防水连接器，配套 24V 电源，岸上部署")
+        add("水下连接单元", "UW Connection Unit（IP65，内置 PoE 供电板，DC24V）",
+            math.ceil(u_cams / 3), "个",
+            "每台级联 3 台水下相机，供电数据一体上岸，可部署岸边/池边")
 
     # 服务器
     add("动捕服务器", "定制（i7-14700F/32G 内存/双网卡/RTX4070）", 1, "台",
@@ -619,8 +620,8 @@ def compute_bom(cfg):
     elif scene_key == "drone":
         targets = max(1, int(opts.get("targets", 2)))
         if mt in ("active", "hybrid"):
-            add("主动光标记体", "CMMC-RBA 系列（含 IMU）", targets, "套",
-                "可编码 ID、光惯融合，适合大空间多目标")
+            add("主动光标记体", "PUCK 主动光刚体（7 颗 850nm 红外灯珠，≤100g）", targets, "套",
+                "光/无线同步、可编码 ID、续航>120min，轻量机载")
         if mt in ("passive", "hybrid"):
             add("反光标记点", "CMMC-MARKER（8-10mm）", 5 * targets, "个",
                 "每个刚体至少 5 个反光球" + ("（被动备份）" if mt == "hybrid" else ""))
@@ -642,8 +643,9 @@ def compute_bom(cfg):
                 "每个刚体至少 5 个，另备损耗")
         if mt in ("active", "hybrid"):
             targets = max(1, int(opts.get("targets", 2)))
-            add("主动光标记体", "CMMC-RBA 系列（含 IMU）", targets, "套",
-                "可编码 ID、无线同步，适合大空间/室外/多目标")
+            add("主动光标记体", "F1-EDG 主动光模块盒（8 路高功率 LED，9 轴 IMU 1000Hz）",
+                targets, "套",
+                "可编码 ID、光/无线同步、24V DC，适合大空间/室外/多目标")
 
     # 选配
     glove_model = opts.get("glove_model") or ""
@@ -654,6 +656,10 @@ def compute_bom(cfg):
             "Pulse 系统含全身捕捉套件与多模态相机，灵巧手精细操作采集")
     if opts.get("face"):
         add("面捕头盔", "Lookme/G2", 1, "台", "面部捕捉")
+    if opts.get("truss"):
+        perim = 2 * (cfg["L"] + cfg["W"])
+        add("桁架系统", "铝合金快装桁架（含吊装/连接件）", 1, "批",
+            f"场地顶部环绕一圈约 {perim:.0f}m，相机吊装固定，高度可调")
 
     if sync:
         sm = opts.get("sync_model") or "CMLOCK"
@@ -793,7 +799,7 @@ def build_config(form):
     # 布置层数：0=自动（场地高度>6m 两层），可手动指定 1-3 层
     n_layers = int(form.get("layers") or 0)
     if n_layers <= 0:
-        n_layers = 2 if H > 6 else 1
+        n_layers = 2 if H >= 6 else 1
     n_layers = max(1, min(3, n_layers))
 
     cam = form.get("camera") or scene["default_cam"]
@@ -866,6 +872,7 @@ def build_config(form):
             glove_model=(form.get("glove_model") or "").strip(),
             face=bool(form.get("face")),
             render_server=bool(form.get("render_server")),
+            truss=bool(form.get("truss")),
             sync=sync,
             sync_model=sync_model,
             layers=n_layers,
@@ -946,10 +953,16 @@ def build_config(form):
                                  "本方案已按 CMLOCK 配置。").strip()
         cfg["bom_sync_final"] = sync_model
 
-    # 选型-场地距离校核：任何所选型号识别距离不足即告警（含混用第二型号）
+    # 选型-场地距离校核：识别距离不足即告警
+    # 规则：R3 参考相机不参与校核；混用为联合覆盖，任一台满足全场距离即不逐台告警
     d_req = required_range(L, W, H)
+    models = list(dict.fromkeys([cam] + ([cam2] if cam2 else [])))
+    tracking = [m for m in models if m != "R3"]
+    covered = any(CAMERAS[m][key] >= d_req for m in tracking)
     warns = []
-    for m in dict.fromkeys([cam] + ([cam2] if cam2 else [])):
+    for m in tracking:
+        if len(tracking) > 1 and covered:
+            break                       # 混用联合覆盖：一台满足即放行
         rng = CAMERAS[m][key]
         if rng < d_req:
             best, _, feas = recommend_camera(scene_key, L, W, H, active)
